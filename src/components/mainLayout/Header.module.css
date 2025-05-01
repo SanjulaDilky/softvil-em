@@ -1,0 +1,63 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #222323;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    padding-top: 5%;
+    z-index: 30;
+    border-bottom: 1px solid #434646;
+
+  }
+  
+  .title {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .menuButton {
+    display: block;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+  }
+  
+  @media (min-width: 1024px) {
+    .menuButton {
+      display: none; 
+    }
+  }
+  .userInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #eee;
+  }
+  
+  .userImage {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+  }
+  
+  .userName {
+    font-weight: bold;
+  }
+  
+  .userRole {
+    font-size: 0.8rem;
+    color: #aaa;
+  }
+  
+  .logoutButton {
+    background: none;
+    color: #ff6b6b;
+    border: none;
+    cursor: pointer;
+  }
+  
+  
