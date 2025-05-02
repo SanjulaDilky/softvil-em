@@ -4,16 +4,25 @@ const initialState = {
   user: JSON.parse(localStorage.getItem('user')) || null,
   predefinedUsers: [
     {
+      id: 24532,
       name: 'Sanjula Dilky',
       email: 'sanjuladilky@gmail.com',
       role: 'Admin',
       image: 'user_1.jpg',
     },
     {
-      name: 'Jane Smith',
-      email: 'jane@example.com',
+      id: 47532,
+      name: 'Test User',
+      email: 'testuser@gmail.com',
       role: 'User',
-      image: 'jane.png',
+      image: 'user_2.jpg',
+    },
+    {
+      id: 58976,
+      name: 'Test Admin',
+      email: 'testadmin@gmail.com',
+      role: 'Admin',
+      image: 'user_3.jpg',
     },
   ],
 };

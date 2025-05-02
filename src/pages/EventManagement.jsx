@@ -2,14 +2,19 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEvents } from "../features/events/allEventsSlice";
 import { Link } from "react-router-dom";
-import { CalendarDaysIcon, ClockIcon, MapIcon } from "lucide-react";
+import { CalendarDaysIcon, MapIcon } from "lucide-react";
 import AddEventModal from "../components/eventManager/AddEventModal";
-
+import EditEventModal from "../components/eventManager/EditEventModal";
+import { toast } from 'react-hot-toast';
 
 export default function EventManagement() {
+    const { user } = useSelector((state) => state.user);
+    const isAdmin = user?.role === 'Admin';
     const dispatch = useDispatch();
     const { allevents, loading, error } = useSelector(state => state.allevents);
     const [showModal, setShowModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
         dispatch(fetchAllEvents());
@@ -18,28 +23,39 @@ export default function EventManagement() {
     if (loading) return <div>Loading events...</div>;
     if (error) return <div>Error: {error}</div>;
 
+    const handleEditModal = (event) => {
+        setSelectedEvent(event);
+        setShowEditModal(true);
+    }
+
     return (
         <>
-            <div className="px-4 sm:px-6 lg:px-8 py-6 bg-transparent rounded-lg">
-                <div className="sm:flex sm:items-center">
+            <div className="px-4 sm:px-6 lg:px-8 py-6  rounded-lg bg-[#363939] mx-6 my-6">
+                <div className="flex justify-between items-center sm:flex sm:items-center sm:justify-start">
                     <div className="sm:flex-auto">
-                        <h1 className="text-base font-semibold text-white">Manage Events</h1>
-                        <p className="mt-2 text-sm text-gray-300">
-                            A list of all the users in your account including their name, title, email and role.
-                        </p>
+                        <h2 className="text-xl font-bold text-white">Manage Events</h2>
                     </div>
                     <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
                         <button
-                            onClick={() => setShowModal(true)}
+                            onClick={() => {
+                                if (!isAdmin) return toast.error("Only admins can add events");
+                                setShowModal(true);
+                            }}
                             type="button"
-                            className="block cursor-pointer rounded-lg bg-[#3b82f6] hover:opacity-90 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                            disabled={!isAdmin}
+                            className={`block cursor-pointer rounded-lg px-3 py-2 text-center text-sm font-semibold shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2
+        ${isAdmin
+                                    ? 'bg-[#3b82f6] text-white hover:opacity-90 hover:bg-[#3f5373]'
+                                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                                }`}
                         >
                             Add Event
                         </button>
                     </div>
                 </div>
-                <div className="-mx-4 mt-8 sm:-mx-0 bg-[#363939]">
-                    <table className="min-w-full divide-y divide-gray-100 bg-transparent text-gray-400 border-separate border-spacing-y-4 rounded-lg">
+
+                <div className="-mx-4 mt-8 sm:-mx-0 ">
+                    <table className="min-w-full divide-y divide-gray-600 bg-transparent text-gray-400 border-collapse rounded-lg">
                         <thead className="hidden md:table-header-group">
                             <tr>
                                 <th className="px-4 py-3 text-left text-sm font-semibold">Event Name</th>
@@ -50,11 +66,10 @@ export default function EventManagement() {
                                 <th className="px-4 py-3 text-left text-sm font-semibold"><span className="sr-only">Action</span></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700">
-                            {allevents.map((event) => (
-                                <tr key={event.id} className="flex flex-col md:table-row md:flex-row md:items-center  rounded-lg">
+                        <tbody className="divide-y divide-gray-600">
+                            {allevents?.map((event) => (
+                                <tr key={event.id} className="md:table-row block rounded-lg">
                                     <td className="flex flex-col md:table-cell px-4 py-4">
-                                        {/* Desktop */}
                                         <div className="hidden md:flex gap-2 items-center">
                                             <img
                                                 src={event.imageSrc}
@@ -63,11 +78,8 @@ export default function EventManagement() {
                                             />
                                             <div className="text-white">{event.name}</div>
                                         </div>
-
-                                        {/* Mobile */}
                                         <div className="md:hidden flex flex-col gap-2">
                                             <div className="flex justify-between w-full">
-                                                {/* Left side: image + text */}
                                                 <div className="flex gap-4">
                                                     <img
                                                         src={event.imageSrc}
@@ -79,8 +91,6 @@ export default function EventManagement() {
                                                         <div className="text-sm text-gray-400">{event.category}</div>
                                                     </div>
                                                 </div>
-
-                                                {/* Right side: status badge */}
                                                 <div className="self-start">
                                                     <span
                                                         className={`inline-block rounded-full px-2 py-0.5 pb-1 text-xs font-medium ${event.status === 'completed'
@@ -92,8 +102,6 @@ export default function EventManagement() {
                                                     </span>
                                                 </div>
                                             </div>
-
-                                            {/* Edit/View buttons (mobile only) */}
                                             <div className="flex gap-4 pl-14 pt-2">
                                                 <Link className="text-[#6ee7b7] hover:text-indigo-200 text-sm">Edit</Link>
                                                 <Link
@@ -137,7 +145,19 @@ export default function EventManagement() {
                                     </td>
 
                                     <td className="hidden md:table-cell px-4 py-0 pb-4 lg:pb-0 lg:py-4 text-sm space-x-2">
-                                        <Link className="text-[#6ee7b7] hover:text-indigo-200">Edit</Link>
+                                        <button
+                                            onClick={() => {
+                                                if (!isAdmin) return toast.error("Only admins can edit events");
+                                                handleEditModal(event);
+                                            }}
+                                            disabled={!isAdmin}
+                                            className={`cursor-pointer ${isAdmin
+                                                ? 'text-[#6ee7b7] hover:text-indigo-200'
+                                                : 'text-gray-400 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            Edit
+                                        </button>
                                         <Link to={`/events/${event.id}`} className="text-[#3b82f6] hover:text-indigo-200">View</Link>
                                     </td>
                                 </tr>
@@ -148,6 +168,7 @@ export default function EventManagement() {
                 </div>
             </div>
             <AddEventModal isOpen={showModal} onClose={() => setShowModal(false)} />
+            <EditEventModal isOpen={showEditModal} event={selectedEvent} onClose={() => setShowEditModal(false)} />
         </>
     )
 }

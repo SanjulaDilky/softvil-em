@@ -1,5 +1,4 @@
 import { CalendarDaysIcon, ClockIcon } from "lucide-react";
-import { formattedDate } from "../utils/dateFormatter";
 import { Link } from "react-router-dom";
 
 export default function EventCard({ event }) {
@@ -18,7 +17,7 @@ export default function EventCard({ event }) {
                         <div className="flex items-center text-gray-400 text-sm">
                             <CalendarDaysIcon className="w-4 h-4 mr-2 text-gray-400" />
                             <span>
-                                {formattedDate(event.date)}
+                                {event.date}
                             </span>
                         </div>
 

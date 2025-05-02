@@ -1,110 +1,84 @@
 import { http, HttpResponse } from 'msw';
+import { addEventForUser, getAllAttendingEvents, getUserAttendingEvents, removeEventForUser } from '../utils/userAttendingStorage';
+import { loadEvents, saveEvents } from '../utils/eventsStorage';
 
-const events = [
-    {
-        id: 1674,
-        name: 'Timeless Classics',
-        category: 'Musical',
-        description: 'Sri Lankan Evergreens Concerts',
-        href: '#',
-        attendees: [
-            { id: 1, name: 'Chandimal Fernando' }
-        ],
-        host: 'Kelum Srimal',
-        imageSrc: '/events/timeless-classic.jpeg',
-        imageAlt: 'Timeless Classics',
-        date: '04-05-2025',
-        time: '07.00 PM',
-        venuse: 'Bishops College Auditorium',
-        status: 'upcoming',
-        tickets: [
-            { id: 1, type: 'Gold', price: '2500 LKR', status: 'Sold Out' },
-            { id: 2, type: 'Platinum', price: '5000 LKR', status: 'Available' },
-        ]
-    },
-    {
-        id: 2234,
-        name: 'Ahasin Eha - අහසින් එහා ',
-        category: 'Musical',
-        description: 'Get ready for an unforgettable evening of soul-stirring music and for a spectacular live performance! From powerful vocals to heartfelt melodies, by four of the leading artists in the classical music world: Kasun Kalhara, Sashika Nisansala, Danith Sri, and Suneera Sumanga, all accompanied by the renowned and talented composer of our era, Mr. Mahesh Denipitiya. Don’t miss your chance to witness the voices that have touched hearts across the nation, “අහසින් එහා” live and electrifying! ',
-        href: '#',
-        attendees: [
-            { id: 1, name: 'Suneera Sumanga' },
-            { id: 2, name: 'Danith Sri' },
-            { id: 3, name: 'Sashika Nisansala' },
-            { id: 4, name: 'Kasun Kalhara' },
-        ],
-        host: 'Kelum Srimal',
-        imageSrc: '/events/ahasin-eha.jfif',
-        imageAlt: 'Timeless Classics',
-        date: '07-06-2025',
-        time: '07.00 PM',
-        venuse: 'BBMICH - COLOMBO',
-        status: 'upcoming',
-        tickets: [
-            { id: 1, type: 'Gold', price: '3500 LKR', status: 'Sold Out' },
-            { id: 2, type: 'Platinum', price: '5000 LKR', status: 'Available' },
-        ]
-    },
-    {
-        id: 3155,
-        name: 'Naadhagama 360°',
-        category: 'Musical',
-        description: 'සිත් සනසන... සමාජය සරසන... ස්නේහයේ සුන්දර සංයුතිය...',
-        href: '#',
-        attendees: [
-            { id: 1, name: 'Ridma Weerawardhana' },
-            { id: 2, name: 'Danith Sri' },
-            { id: 3, name: 'Supun Perera' },
-            { id: 4, name: 'Dinesh Gamage' },
-            { id: 4, name: 'Kanchana Anuradhi' },
-        ],
-        host: 'manuranga wijesekara',
-        imageSrc: '/events/naadha-gama.png',
-        imageAlt: 'Timeless Classics',
-        date: '14-06-2025',
-        time: '06.00 PM',
-        venuse: 'Sugathadasa Indoor Stadium',
-        status: 'upcoming',
-        tickets: [
-            { id: 1, type: 'Platinum', price: '6500 LKR', status: 'Sold Out' },
-        ]
-    },
-    {
-        id: 3542,
-        name: 'Boyce Avenue Live in Sri Lanka',
-        category: 'Musical',
-        description: 'Boyce Avenue, whose music has garnered millions of fans worldwide, is set to perform live in Sri Lanka as part of their international tour, much to the excitement of their Sri Lankan fanbase.',
-        href: '#',
-        attendees: [
-            { id: 1, name: 'Boyce Avenue' },
-        ],
-        host: 'Clifford Richards',
-        imageSrc: '/events/naadha-gama.png',
-        imageAlt: 'Boyce Avenue Live in Sri Lanka',
-        date: '14-04-2025',
-        time: '07.00 PM',
-        venuse: 'The Hilton Colombo',
-        status: 'completed',
-        tickets: [
-            { id: 1, type: 'Gold', price: '2500 LKR', status: 'Sold Out' },
-            { id: 2, type: 'Platinum', price: '5000 LKR', status: 'Sold Out' },
-        ]
-    },
-];
 
 export const handlers = [
+    //events APIs
     http.get('/api/events/upcoming', () => {
-        const upcomingEvents = events.filter((event) => event.status === 'upcoming');
-        return HttpResponse.json(upcomingEvents);
-    }),
-    http.get('/api/events/all', () => {
-        return HttpResponse.json(events);
-    }),
-    http.get('/api/events/:eventId', ({ params }) => {
-        const { eventId } = params;
-        const selectedEvent = events.find(event => String(event.id) === eventId);
-        return HttpResponse.json(selectedEvent);
+        const events = loadEvents();
+        const upcoming = events.filter(event => event.status === 'upcoming');
+        return HttpResponse.json(upcoming);
     }),
 
-]
+    http.get('/api/events/all', () => {
+        return HttpResponse.json(loadEvents());
+    }),
+
+    http.get('/api/events/:eventId', ({ params }) => {
+        const { eventId } = params;
+        const events = loadEvents();
+        const found = events.find(e => String(e.id) === eventId);
+        return found
+            ? HttpResponse.json(found)
+            : HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    }),
+
+    http.post('/api/events', async ({ request }) => {
+        const newEvent = await request.json();
+        const events = loadEvents();
+        events.push(newEvent);
+        saveEvents(events);
+        return HttpResponse.json(newEvent, { status: 201 });
+    }),
+
+    http.put('/api/events/manage/:id', async ({ request, params }) => {
+        const updatedEvent = await request.json();
+        const events = loadEvents();
+        const index = events.findIndex(event => event.id === Number(params.id));
+
+        if (index === -1) {
+            return new Response('Event not found', { status: 404 });
+        }
+
+        events[index] = { ...events[index], ...updatedEvent };
+        saveEvents(events);
+
+        return HttpResponse.json(events[index]);
+    }),
+
+    //hosts APIs
+    http.get('/api/upcoming-events/hosts', () => {
+        const events = loadEvents();
+        const upcoming = events.filter(event => event.status === 'upcoming');
+
+        const hosts = [...new Set(upcoming.map(event => event.host))];
+
+        return HttpResponse.json(hosts);
+    }),
+
+    //user attending events APIs
+    http.get("/api/user/all-events", () => {
+        const data = Object.values(getAllAttendingEvents()).flat();
+        return HttpResponse.json(data);
+      }),
+      
+    http.get("/api/user/:userId/events", ({ params }) => {
+        const { userId } = params;
+        const events = getUserAttendingEvents(userId);
+        return HttpResponse.json(events);
+    }),
+
+    http.post("/api/user/:userId/events", async ({ request, params }) => {
+        const { userId } = params;
+        const event = await request.json(); 
+        addEventForUser(userId, event);
+        return HttpResponse.json({ success: true });
+    }),
+
+    http.delete("/api/user/:userId/events/:eventId", ({ params }) => {
+        const { userId, eventId } = params;
+        removeEventForUser(userId, parseInt(eventId));
+        return HttpResponse.json({ success: true });
+    }),
+];

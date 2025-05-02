@@ -14,16 +14,16 @@ const Login = () => {
 
     const isEmailValid = /\S+@\S+\.\S+/.test(email);
 
-    const { predefinedUsers } = useSelector((state) => state.user);    
+    const { predefinedUsers } = useSelector((state) => state.user);
 
     const handleLogin = (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
 
         const matchedUser = predefinedUsers.find(user => user.email === email);
 
         if (matchedUser) {
             dispatch(loginUser(matchedUser));
-            navigate('/');
+            setTimeout(() => navigate('/'), 100);
         } else {
             alert('User not found');
         }
@@ -31,9 +31,15 @@ const Login = () => {
     return (
         <div className={styles.container}>
             <form className={styles.form} onSubmit={handleLogin} noValidate>
-                <h2 className={styles.title}>Login</h2>
+                <div className={styles.logoMainWrapper}>
+                    <div className={styles.logoWrapper}>
+                        <img src="/logo.png" alt="Logo" className={styles.logo} />
+                    </div>
 
-                <label className={styles.label}>Email</label>
+                    <h2 className={styles.title}>Welcome Back</h2>
+                    <p className={styles.subtitle}>Please log in to your account</p>
+                </div>
+
                 <input
                     type="email"
                     value={email}
@@ -41,9 +47,11 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                     required
+                    placeholder='Enter your email address here'
                 />
-                {touched.email && !isEmailValid && <p className={styles.error}>Enter a valid email.</p>}
-
+                {touched.email && !isEmailValid && (
+                    <p className={styles.error}>Enter a valid email.</p>
+                )}
 
                 <button type="submit" className={styles.button} disabled={!isEmailValid}>
                     Login

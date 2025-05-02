@@ -15,7 +15,6 @@ export default function EventDetails() {
 
         axios.get(`/api/events/${eventId}`)
             .then(response => {
-                console.log(response.data);
                 setEvent(response.data)
             })
             .catch(error => console.error('Error fetching event:', error));

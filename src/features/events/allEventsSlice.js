@@ -21,7 +21,16 @@ const allEventsSlice = createSlice({
     reducers: {
         addEvent: (state, action) => {
             state.allevents.push(action.payload);
-        }
+        },
+        updateEvent: (state, action) => {
+            const index = state.allevents.findIndex(event => event.id === action.payload.id);
+            if (index !== -1) {
+                state.allevents[index] = action.payload;
+            }
+        },
+        setAllEvents: (state, action) => {
+            state.allevents = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -38,5 +47,5 @@ const allEventsSlice = createSlice({
             });
     },
 });
-export const { addEvent } = allEventsSlice.actions;
+export const { addEvent,updateEvent, setAllEvents } = allEventsSlice.actions;
 export default allEventsSlice.reducer;
